@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel Administrativo - Café Albania</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/aos@3.0.0-beta.6/dist/aos.css" rel="stylesheet">
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+
+<!-- Botón hamburguesa -->
+<!-- BOTÓN HAMBURGUESA -->
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <!-- Título -->
+  <h2>Panel Café Albania</h2>
+
+  <!-- Menú de navegación -->
+  <nav class="sidebar-menu">
+    <a href="#" class="active" data-section="galeria">
+      <i class="fas fa-image"></i><span>Galería</span>
+    </a>
+    <a href="#" data-section="aventura">
+      <i class="fas fa-bolt"></i><span>Juegos Extremos</span>
+    </a>
+    <a href="#" data-section="restaurantes">
+      <i class="fas fa-utensils"></i><span>Restaurantes</span>
+    </a>
+
+    <!-- Footer del sidebar -->
+    <div class="sidebar-footer">
+      <a href="#" id="btnCerrar">
+        <i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span>
+      </a>
+    </div>
+
+    <!-- Botón Modo Noche -->
+    <div class="sidebar-dark-mode">
+      <button id="toggle-dark-mode" class="dark-mode-btn" title="Modo noche">
+        🌙 <span class="btn-text">Modo Noche</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<div class="content" id="content">
+  <div class="content-header">
+    <h1 id="panel-title">Editar Galería</h1>
+    <button id="btnToggleSidebar" class="sidebar-toggle">☰</button>
+  </div>
+
+  <!-- Sección Galería -->
+  <div id="galeria-section" class="section">
+    <div class="section-title">
+      <h4>Galería</h4>
+      <span id="galeria-count"></span>
+    </div>
+    <div id="galeria-list" class="row"></div>
+    <button class="btn btn-primary mt-2" onclick="agregarGaleria()">Agregar Elemento</button>
+  </div>
+
+  <!-- Sección Juegos Extremos -->
+  <div id="aventura-section" class="section" style="display:none;">
+    <div class="section-title">
+      <h4>Juegos Extremos</h4>
+      <span id="aventura-count"></span>
+    </div>
+    <div id="aventura-list" class="row"></div>
+    <button class="btn btn-primary mt-2" onclick="agregarJuego()">Agregar Juego</button>
+  </div>
+
+  <!-- Sección Restaurantes -->
+  <div id="restaurantes-section" class="section" style="display:none;">
+    <div class="section-title">
+      <h4>Restaurantes</h4>
+      <span id="restaurantes-count"></span>
+    </div>
+    <div id="restaurantes-list" class="row"></div>
+    <button class="btn btn-primary mt-2" onclick="agregarRestaurante()">Agregar Restaurante</button>
+  </div>
+</div>
+
+
+<!-- Contenedor para modales -->
+<div id="modals-container"></div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/aos@3.0.0-beta.6/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Incluye librerías Quill en tu HTML -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
+
+<!-- Asegúrate de tener SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>// ------------------- FUNCIONES COOKIES -------------------
+function getCookie(name) {
+  const nameEQ = name + "=";
+  return document.cookie.split(';')
+    .map(c => c.trim())
+    .find(c => c.startsWith(nameEQ))
+    ?.substring(nameEQ.length) || null;
+}
+
+function deleteCookie(name) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
+
+// ------------------- BLOQUEAR USO DE PÁGINA SI NO HAY COOKIE -------------------
+function bloquearPaginaSiNoHayToken() {
+  const token = getCookie('token');
+
+  if (!token) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Sesión expirada',
+      text: 'Por favor inicia sesión nuevamente.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      confirmButtonText: 'Ir a Login'
+    }).then(() => window.location.href = 'login.html');
+    return true; // Bloquear ejecución del resto
+  }
+  return false;
+}
+
+// ------------------- INICIALIZAR DARK MODE -------------------
+function initDarkMode() {
+  const toggleBtn = document.getElementById('toggle-dark-mode');
+  if (!toggleBtn) return;
+
+  const setMode = (enabled) => {
+    document.body.classList.toggle('dark-mode', enabled);
+    localStorage.setItem('darkMode', enabled ? 'enabled' : 'disabled');
+    toggleBtn.textContent = enabled ? "☀️ Modo Día" : "🌙 Modo Noche";
+  };
+
+  // Estado inicial
+  setMode(localStorage.getItem('darkMode') === 'enabled');
+
+  // Evento click
+  toggleBtn.addEventListener('click', () => {
+    setMode(!document.body.classList.contains('dark-mode'));
+  });
+}
+
+// ------------------- CERRAR SESIÓN -------------------
+function initCerrarSesion() {
+  const btnCerrar = document.getElementById('btnCerrar');
+  if (!btnCerrar) return;
+
+  btnCerrar.addEventListener('click', (e) => {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Cerrar sesión',
+      text: "¿Estás seguro de que quieres cerrar sesión?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, cerrar sesión',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteCookie('token');
+        Swal.fire({
+          icon: 'success',
+          title: 'Sesión cerrada',
+          text: 'Has cerrado sesión correctamente',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+        }).then(() => window.location.href = 'login.html');
+      } else {
+        // Si cancela, redirigir a la página de galerías
+        window.location.href = 'panel.html';
+      }
+    });
+  });
+}
+
+// ------------------- TOGGLE SIDEBAR -------------------
+function initSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const btnToggle = document.getElementById('btnToggleSidebar');
+  const content = document.querySelector('.content');
+
+  if (!sidebar || !btnToggle || !content) return;
+
+  btnToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('show');
+    content.classList.toggle('shifted');
+  });
+}
+
+// ------------------- CARGAR PÁGINA -------------------
+window.addEventListener('DOMContentLoaded', () => {
+  if (bloquearPaginaSiNoHayToken()) return;
+
+  // Ejecutar funciones de datos
+  if (typeof fetchGaleria === "function") fetchGaleria();
+  if (typeof fetchJuegos === "function") fetchJuegos();
+  if (typeof fetchRestaurantes === "function") fetchRestaurantes();
+
+  // Inicializar UI
+  initDarkMode();
+  initCerrarSesion();
+  initSidebar();
+
+  // Animaciones
+  if (typeof AOS !== "undefined") AOS.init();
+});
+
+
+let BASE_URL = ''; // Se leerá desde config.xml
+let galeria = [];
+let juegos = [];
+let restaurantes = [];
+
+// ------------------- LEE EL XML -------------------
+async function loadConfig() {
+  try {
+    const res = await fetch('/config.xml'); // Ruta del XML
+    const text = await res.text();
+
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "application/xml");
+
+    const urlNode = xml.querySelector('baseUrl');
+    if (urlNode) {
+      BASE_URL = urlNode.textContent.trim();
+      console.log("BASE_URL cargada:", BASE_URL);
+
+      // Llamar a todas las funciones de fetch DESPUÉS de cargar BASE_URL
+      await fetchAllData();
+    } else {
+      console.warn('No se encontró <baseUrl> en config.xml');
+    }
+  } catch (err) {
+    console.error('Error cargando config.xml:', err);
+  }
+}
+
+loadConfig();
+
+// ------------------- FETCH TODO -------------------
+async function fetchAllData() {
+  await Promise.all([
+    fetchGaleria(),
+    fetchJuegos(),
+    fetchRestaurantes()
+  ]);
+}
+
+// ------------------- FETCH API -------------------
+async function fetchGaleria() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/web/banners`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    galeria = Array.isArray(data.banners) ? data.banners.map(item => ({
+      ...item,
+      imagenes: item.imagen ? JSON.parse(item.imagen) : [],
+      imagenFile: []
+    })) : [];
+
+    renderGaleria();
+  } catch (e) {
+    galeria = [];
+    renderGaleria();
+    console.error('❌ Error cargando galería:', e);
+  }
+}
+
+async function fetchJuegos() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/juegos`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    juegos = Array.isArray(data.data) ? data.data : [];
+    renderJuegos();
+  } catch (e) {
+    juegos = [];
+    renderJuegos();
+    console.error('❌ Error cargando juegos:', e);
+  }
+}
+
+async function fetchRestaurantes() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/restaurantes`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    restaurantes = Array.isArray(data.restaurantes) ? data.restaurantes : [];
+    renderRestaurantes();
+  } catch (e) {
+    restaurantes = [];
+    renderRestaurantes();
+    console.error('❌ Error cargando restaurantes:', e);
+  }
+}
+
+// ------------------- GUARDAR GALERÍA -------------------
+async function guardarGaleria(index) {
+  const item = galeria[index];
+  const url = item.id ? `${BASE_URL}/api/web/banners/${item.id}` : `${BASE_URL}/api/web/banners`;
+
+  const confirm = await Swal.fire({
+    title: item.id ? '¿Actualizar este banner?' : '¿Guardar nuevo banner?',
+    text: 'Se enviarán los datos al servidor',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, guardar',
+    cancelButtonText: 'Cancelar'
+  });
+  if (!confirm.isConfirmed) return;
+
+  const formData = new FormData();
+  formData.append('titulo', item.titulo || '');
+  formData.append('descripcion_corta', item.descripcion_corta || '');
+  formData.append('descripcion_larga', item.descripcion_larga || '');
+  
+  if (item.imagenFile && item.imagenFile.length > 0) {
+    item.imagenFile.forEach(file => formData.append('imagenes', file));
+  }
+
+  Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+  try {
+    const method = item.id ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, body: formData });
+    if (!res.ok) throw new Error('Error al subir datos');
+
+    const data = await res.json();
+    item.id = data.id || item.id;
+
+    Swal.fire({ icon: 'success', title: 'Banner guardado!', showConfirmButton: false, timer: 1500 });
+    fetchGaleria();
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar el banner' });
+  }
+}
+
+// ------------------- GUARDAR JUEGOS -------------------
+async function guardarJuego(index) {
+  const item = juegos[index];
+  const url = item.id ? `${BASE_URL}/api/juegos/${item.id}` : `${BASE_URL}/api/juegos`;
+  
+  const confirm = await Swal.fire({
+    title: item.id ? `¿Actualizar este juego?` : `¿Guardar nuevo juego?`,
+    text: "Se enviarán los datos al servidor",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, guardar',
+    cancelButtonText: 'Cancelar'
+  });
+  if (!confirm.isConfirmed) return;
+
+  const formData = new FormData();
+  formData.append('nombre', item.nombre || '');
+  formData.append('descripcion_corta', item.descripcion_corta || '');
+  formData.append('descripcion_larga', item.descripcion_larga || '');
+
+  const precio = parseFloat(item.precio);
+  formData.append('precio', isNaN(precio) ? 0 : precio);
+  formData.append('duracion', item.duracion || '');
+
+  if (item.imagenFile && item.imagenFile.length > 0) {
+    item.imagenFile.forEach(file => formData.append('imagenes', file));
+  }
+
+  Swal.fire({ title:'Guardando...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+
+  try {
+    const method = item.id ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, body: formData });
+    if (!res.ok) throw new Error("Error al subir datos");
+
+    const data = await res.json();
+    item.id = data.data?.id || item.id;
+
+    Swal.fire({ icon: 'success', title: 'Juego guardado!', showConfirmButton: false, timer: 1500 });
+    fetchJuegos();
+  } catch(e) {
+    console.error('❌ Error guardando juego:', e);
+    Swal.fire({ icon: 'error', title: 'Error', text: `No se pudo guardar el juego` });
+  }
+}
+
+// ------------------- GUARDAR RESTAURANTE -------------------
+async function guardarRestaurante(index) {
+  const item = restaurantes[index];
+  const url = item.id ? `${BASE_URL}/api/restaurantes/${item.id}` : `${BASE_URL}/api/restaurantes`;
+
+  const confirm = await Swal.fire({
+    title: item.id ? '¿Actualizar este restaurante?' : '¿Guardar nuevo restaurante?',
+    text: "Se enviarán los datos al servidor",
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, guardar',
+    cancelButtonText: 'Cancelar'
+  });
+  if (!confirm.isConfirmed) return;
+
+  const formData = new FormData();
+  formData.append('nombre', item.nombre || '');
+  formData.append('descripcion_corta', item.descripcion_corta || '');
+  formData.append('descripcion_larga', item.descripcion_larga || '');
+
+  if (item.imagenFile && item.imagenFile.length > 0) {
+    item.imagenFile.forEach(file => formData.append('imagenes[]', file));
+  }
+
+  Swal.fire({ title: 'Guardando restaurante...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+  try {
+    const method = item.id ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, body: formData });
+    if (!res.ok) throw new Error("Error al subir datos");
+
+    const data = await res.json();
+    item.id = data.data?.id || item.id;
+    item.nombre = data.data?.nombre || item.nombre;
+    item.descripcion_corta = data.data?.descripcion_corta || item.descripcion_corta;
+    item.descripcion_larga = data.data?.descripcion_larga || item.descripcion_larga;
+    item.imagenes = data.data?.imagenes || item.imagenes;
+
+    Swal.fire({ icon: 'success', title: 'Restaurante guardado!', showConfirmButton: false, timer: 1500 });
+    renderRestaurantes();
+  } catch (e) {
+    console.error('❌ Error guardando restaurante:', e);
+    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar el restaurante' });
+  }
+}
+
+// ------------------- ELIMINAR ITEM -------------------
+async function eliminarItem(tipo, index) {
+  let item, url;
+  if (tipo === 'galeria') { 
+    item = galeria[index]; 
+    url = `${BASE_URL}/api/web/banners/${item.id}`; 
+  } else if (tipo === 'juegos') { 
+    item = juegos[index]; 
+    url = `${BASE_URL}/api/juegos/${item.id}`; 
+  } else if (tipo === 'restaurantes') { 
+    item = restaurantes[index]; 
+    url = `${BASE_URL}/api/restaurantes/${item.id}`; 
+  }
+
+  const confirm = await Swal.fire({
+    title: `¿Estás seguro de eliminar este ${tipo}?`,
+    text: "¡Esta acción no se puede deshacer!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    if (item.id) {
+      Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      const res = await fetch(url, { method: 'DELETE' });
+      if (!res.ok) throw new Error("Error al eliminar");
+    }
+
+    if (tipo === 'galeria') galeria.splice(index, 1);
+    else if (tipo === 'juegos') juegos.splice(index, 1);
+    else if (tipo === 'restaurantes') restaurantes.splice(index, 1);
+
+    if (tipo === 'galeria') renderGaleria();
+    else if (tipo === 'juegos') renderJuegos();
+    else if (tipo === 'restaurantes') renderRestaurantes();
+
+    Swal.fire({ icon: 'success', title: `${tipo.charAt(0).toUpperCase() + tipo.slice(1)} eliminado!`, showConfirmButton: false, timer: 1500 });
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Error', text: `No se pudo eliminar ${tipo}` });
+  }
+}
+
+// ---------------------- MENÚ RESTAURANTE ----------------------
+async function guardarMenu(restIndex, menuIndex) {
+  const r = restaurantes[restIndex];
+  const p = r.menu[menuIndex];
+
+  if (!p.nombre || !p.precio || isNaN(p.precio)) {
+    Swal.fire({ icon: 'error', title: 'Error', text: 'El nombre y un precio válido son obligatorios.' });
+    return;
+  }
+
+  Swal.fire({ title: 'Guardando plato...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+  try {
+    const formData = new FormData();
+    formData.append('nombre_menu', p.nombre);
+    if (p.descripcion_corta) formData.append('descripcion_corta', p.descripcion_corta.trim());
+    if (p.descripcion_larga) formData.append('descripcion_larga', p.descripcion_larga.trim());
+    formData.append('precio', p.precio);
+    if (p.imagenFile) formData.append('imagen', p.imagenFile);
+
+    const url = p.id
+      ? `${BASE_URL}/api/restaurantes/${r.id}/menus/${p.id}`
+      : `${BASE_URL}/api/restaurantes/${r.id}/menus`;
+    const method = p.id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, { method, body: formData });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.message || "Error al guardar plato");
+
+    p.id = data.id || p.id;
+    p.nombre = data.nombre_menu || p.nombre;
+    p.descripcion_corta = data.descripcion_corta || p.descripcion_corta;
+    p.descripcion_larga = data.descripcion_larga || p.descripcion_larga;
+    p.precio = data.precio || p.precio;
+    p.imagen = data.imagen || p.imagen;
+
+    Swal.fire({ icon: 'success', title: 'Plato guardado!', showConfirmButton: false, timer: 1500 });
+    renderRestaurantes();
+  } catch (e) {
+    console.error(e);
+    Swal.fire({ icon: 'error', title: 'Error', text: e.message || 'No se pudo guardar el plato' });
+  }
+}
+
+async function eliminarMenu(restIndex, menuIndex) {
+  const r = restaurantes[restIndex];
+  const p = r.menu[menuIndex];
+
+  if (!p.id) {
+    r.menu.splice(menuIndex, 1);
+    renderRestaurantes();
+    return;
+  }
+
+  const confirm = await Swal.fire({
+    title: '¿Eliminar plato?',
+    text: `Se eliminará "${p.nombre}"`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  });
+
+  if (confirm.isConfirmed) {
+    try {
+      const res = await fetch(`${BASE_URL}/api/restaurantes/${r.id}/menus/${p.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || 'No se pudo eliminar');
+
+      r.menu.splice(menuIndex, 1);
+      renderRestaurantes();
+      Swal.fire({ icon: 'success', title: 'Plato eliminado', timer: 1500, showConfirmButton: false });
+    } catch (e) {
+      console.error(e);
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo eliminar el plato' });
+    }
+  }
+}
+
+// ---------------------- CARGAR RESTAURANTE ----------------------
+async function cargarRestaurante(id) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/restaurantes/${id}`);
+    const data = await res.json();
+    if (data.success && data.restaurante) {
+      const r = data.restaurante;
+      const restaurante = {
+        id: r.id,
+        nombre: r.nombre || '',
+        descripcion_corta: r.descripcion_corta || '',
+        descripcion_larga: r.descripcion_larga || '',
+        imagenes: r.imagenes || [],
+        menu: (r.menu || []).map(m => ({
+          id: m.id,
+          nombre: m.nombre_menu || '',
+          descripcion_corta: m.descripcion_corta || '',
+          descripcion_larga: m.descripcion_larga || '',
+          precio: m.precio || 0,
+          imagen: m.imagen || ''
+        }))
+      };
+      const index = restaurantes.findIndex(rest => rest.id === restaurante.id);
+      if (index >= 0) restaurantes[index] = restaurante;
+      else restaurantes.push(restaurante);
+      renderRestaurantes();
+    } else console.error('No se encontró el restaurante o error en la respuesta');
+  } catch (err) {
+    console.error('Error cargando restaurante:', err);
+  }
+}
+
+// ------------------- SUBIDA DE IMÁGENES -------------------
+function subirImagen(event, tipo, index, menuIndex = null) {
+  const files = Array.from(event.target.files).slice(0, 3);
+  if (!files.length) return;
+
+  const dataMaps = { 'galeria': galeria, 'juegos': juegos, 'restaurantes': restaurantes };
+  const targetArray = dataMaps[tipo];
+  let targetItem = targetArray[index];
+
+  if (tipo === 'restaurantes' && menuIndex !== null) {
+    if (!targetItem.menu) targetItem.menu = [];
+    if (!targetItem.menu[menuIndex]) targetItem.menu[menuIndex] = {};
+    targetItem = targetItem.menu[menuIndex];
+  }
+
+  targetItem.imagenFile = files;
+  targetItem.imagenes = files.map(file => URL.createObjectURL(file));
+
+  if (tipo === 'galeria') renderGaleria();
+  else if (tipo === 'juegos') renderJuegos();
+  else if (tipo === 'restaurantes') renderRestaurantes();
+}
+
+
+// ------------------- RENDER -------------------
+function renderModales(array, tipo) {
+  return array.map((item,i)=>`
+    <div class="modal fade" id="modal-${tipo}-${i}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">${tipo==='galeria'?item.titulo:item.nombre}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Corta:</strong> ${item.descripcion_corta||''}</p>
+            <p><strong>Larga:</strong> ${item.descripcion_larga||''}</p>
+            <img src="${item.imagen}" class="img-fluid rounded">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            ${tipo!=='galeria'?'<a href="https://wa.me/50300000000" class="btn btn-success">Reservar ahora</a>':''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderGaleria() {
+  const cont = document.getElementById('galeria-list');
+  document.getElementById('modals-container').innerHTML = renderModales(galeria, 'galeria');
+
+  cont.innerHTML = galeria.map((item, i) => `
+    <div class="card card-edit col-md-4" 
+         style="margin-bottom:20px; box-shadow:0 2px 6px rgba(0,0,0,0.15); border-radius:8px; padding:10px;">
+
+      <!-- Vista previa imágenes -->
+      <small style="display:block; margin-bottom:3px; color:#555;">Imágenes</small>
+      <div class="imagenes-preview" style="display:flex; gap:5px; overflow-x:auto; margin-bottom:10px;">
+        ${(item.imagenes || []).map((img, idx) => `
+          <img src="${img}" alt="Imagen ${idx+1}" 
+               style="width:80px; height:80px; object-fit:cover; border-radius:6px; flex-shrink:0;">
+        `).join('')}
+      </div>
+
+      <!-- Subir imagen -->
+      <small style="display:block; margin-bottom:3px; color:#555;">Subir nueva imagen</small>
+      <input type="file" accept="image/*" onchange="subirImagen(event,'galeria',${i})" style="margin-bottom:10px; width:100%;">
+
+      <!-- Título -->
+      <small style="display:block; margin-bottom:3px; color:#555;">Título</small>
+      <input type="text" value="${item.titulo || ''}" placeholder="Título" 
+             onchange="galeria[${i}].titulo=this.value" 
+             style="width:100%; margin-bottom:10px; padding:5px; border-radius:4px; border:1px solid #ccc;">
+
+      <!-- Descripción corta -->
+      <small style="display:block; margin-bottom:3px; color:#555;">Descripción corta (máx. 20 caracteres)</small>
+      <div id="editor-galeria-corta-${i}" style="height:80px; margin-bottom:5px;"></div>
+      <small id="contador-corta-${i}" style="display:block; color:#999; font-size:12px; text-align:right;">${(item.descripcion_corta || '').length}/20</small>
+
+      <!-- Botones -->
+      <div class="card-buttons" style="margin-top:5px; display:flex; gap:5px;">
+        <button class="btn btn-save" onclick="guardarGaleria(${i})" style="flex:1;">Guardar</button>
+        <button class="btn btn-danger" onclick="eliminarItem('galeria',${i})" style="flex:1;">Eliminar</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('galeria-count').textContent = `Total: ${galeria.length}`;
+
+  // Inicializar Quill con límite de 20 caracteres y contador
+  galeria.forEach((item, i) => {
+    const editorCorta = new Quill(`#editor-galeria-corta-${i}`, {
+      theme: 'snow',
+      placeholder: 'Escribe aquí la descripción corta...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ color: [] }],
+          ['clean']
+        ]
+      }
+    });
+
+    // Cargar contenido inicial
+    editorCorta.root.innerHTML = item.descripcion_corta || '';
+
+    const contador = document.getElementById(`contador-corta-${i}`);
+
+    editorCorta.on('text-change', () => {
+      let text = editorCorta.getText(); // texto plano
+      if (text.length > 40) {
+        editorCorta.deleteText(40, text.length);
+        text = editorCorta.getText();
+      }
+      // Actualizar contador
+      contador.textContent = `${text.length}/40`;
+      // Guardar contenido limitado
+      galeria[i].descripcion_corta = editorCorta.root.innerHTML;
+    });
+  });
+}
+
+
+function renderJuegos() {
+  const cont = document.getElementById('aventura-list');
+  const modalsContainer = document.getElementById('modals-container');
+  modalsContainer.innerHTML = '';
+
+  cont.innerHTML = juegos.map((j, i) => {
+    if (!j.imagenes) j.imagenes = [];
+    return `
+      <div class="card card-edit col-md-4 p-2 m-2 shadow-sm">
+        <div class="mb-2 text-center">
+          ${j.imagenes.map((img, idx) => `
+            <img src="${img}" alt="Imagen ${idx+1}" class="card-img-top mb-1" style="max-height:100px;object-fit:cover">
+          `).join('')}
+          <input type="file" class="form-control mt-1" accept="image/*" multiple onchange="subirImagen(event,'juegos',${i})">
+          <small class="text-muted">Selecciona de 1 a 3 imágenes</small>
+        </div>
+
+        <input type="text" class="form-control mb-1" value="${j.nombre || ''}" placeholder="Nombre" onchange="juegos[${i}].nombre=this.value">
+
+        <!-- Descripción corta con Quill -->
+        <small class="text-muted">Descripción corta (máx. 50 caracteres)</small>
+        <div id="editor-juegos-corta-${i}" class="editor-corta mb-1"></div>
+        <small id="contador-corta-${i}" class="text-end text-muted mb-2" style="display:block;">${(j.descripcion_corta || '').length}/50</small>
+
+        <!-- Descripción larga con Quill -->
+        <small class="text-muted">Descripción larga</small>
+        <div id="editor-juegos-larga-${i}" class="editor-larga mb-2"></div>
+
+        <div class="d-flex justify-content-between mb-2">
+          <input type="number" class="form-control me-1" value="${j.precio || ''}" placeholder="Precio" step="0.01" min="0" style="max-width:48%;" onchange="juegos[${i}].precio=this.value">
+          <input type="text" class="form-control ms-1" value="${j.duracion || ''}" placeholder="Duración" style="max-width:48%;" onchange="juegos[${i}].duracion=this.value">
+        </div>
+        <div class="card-buttons mt-2 d-flex justify-content-between">
+          <button class="btn btn-success" onclick="guardarJuego(${i})">💾 Guardar juego</button>
+          <button class="btn btn-danger" onclick="eliminarItem('juegos',${i})">🗑 Eliminar juego</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('aventura-count').textContent = `Total: ${juegos.length}`;
+
+  // Inicializar Quill solo para descripción corta con límite de 50 caracteres
+  juegos.forEach((j, i) => {
+    const editorCorta = new Quill(`#editor-juegos-corta-${i}`, {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ color: [] }],
+          ['clean']
+        ]
+      }
+    });
+
+    editorCorta.root.innerHTML = j.descripcion_corta || '';
+    const contadorCorta = document.getElementById(`contador-corta-${i}`);
+
+    editorCorta.on('text-change', () => {
+      let text = editorCorta.getText();
+      if (text.length > 50) {
+        editorCorta.deleteText(50, text.length);
+        text = editorCorta.getText();
+      }
+      contadorCorta.textContent = `${text.length}/50`;
+      juegos[i].descripcion_corta = editorCorta.root.innerHTML;
+    });
+
+    // Inicializar Quill para la descripción larga sin límite
+    const editorLarga = new Quill(`#editor-juegos-larga-${i}`, {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ color: [] }, { background: [] }],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      }
+    });
+    editorLarga.root.innerHTML = j.descripcion_larga || '';
+    editorLarga.on('text-change', () => {
+      juegos[i].descripcion_larga = editorLarga.root.innerHTML;
+    });
+  });
+}
+
+function renderRestaurantes() {
+  const cont = document.getElementById('restaurantes-list');
+  const modalsContainer = document.getElementById('modals-container');
+  modalsContainer.innerHTML = '';
+
+  cont.innerHTML = restaurantes.map((r, i) => {
+    if (!r.imagenes) r.imagenes = [];
+    return `
+      <div class="card card-edit col-md-4 p-2 m-2 shadow-sm">
+        <div class="mb-2 text-center">
+          ${r.imagenes.map((img, idx) => `
+            <img src="${img}" alt="Imagen ${idx+1}" class="card-img-top mb-1" style="max-height:100px;object-fit:cover">
+          `).join('')}
+          <input type="file" class="form-control form-control-sm mt-1" accept="image/*" multiple onchange="subirImagen(event,'restaurantes',${i})">
+          <small class="text-muted">Selecciona de 1 a 3 imágenes</small>
+        </div>
+
+        <input type="text" class="form-control form-control-sm mb-1" value="${r.nombre || ''}" placeholder="Nombre" onchange="restaurantes[${i}].nombre=this.value">
+        
+        <!-- Descripción corta con Quill -->
+        <small class="text-muted">Descripción corta (máx. 50 caracteres)</small>
+        <div id="editor-restaurantes-corta-${i}" class="editor-corta mb-1"></div>
+        <small id="contador-corta-${i}" class="text-end text-muted mb-2" style="display:block;">${(r.descripcion_corta || '').length}/50</small>
+
+        <!-- Descripción larga con Quill -->
+        <small class="text-muted">Descripción larga</small>
+        <div id="editor-restaurantes-larga-${i}" class="editor-larga mb-2"></div>
+
+        <div class="card-buttons mt-3 d-flex justify-content-between">
+          <button class="btn btn-warning" onclick="guardarRestaurante(${i})">💾 Guardar restaurante</button>
+          <button class="btn btn-danger" onclick="eliminarItem('restaurantes',${i})">🗑 Eliminar restaurante</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('restaurantes-count').textContent = `Total: ${restaurantes.length}`;
+
+  // Inicializar Quill para descripción corta y larga
+  restaurantes.forEach((r, i) => {
+    // Descripción corta con límite de 50 caracteres
+    const editorCorta = new Quill(`#editor-restaurantes-corta-${i}`, {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ color: [] }],
+          ['clean']
+        ]
+      }
+    });
+    editorCorta.root.innerHTML = r.descripcion_corta || '';
+    const contadorCorta = document.getElementById(`contador-corta-${i}`);
+    editorCorta.on('text-change', () => {
+      let text = editorCorta.getText();
+      if (text.length > 50) {
+        editorCorta.deleteText(50, text.length);
+        text = editorCorta.getText();
+      }
+      contadorCorta.textContent = `${text.length}/50`;
+      restaurantes[i].descripcion_corta = editorCorta.root.innerHTML;
+    });
+
+    // Descripción larga sin límite
+    const editorLarga = new Quill(`#editor-restaurantes-larga-${i}`, {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          [{ header: [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ color: [] }, { background: [] }],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'image'],
+          ['clean']
+        ]
+      }
+    });
+    editorLarga.root.innerHTML = r.descripcion_larga || '';
+    editorLarga.on('text-change', () => {
+      restaurantes[i].descripcion_larga = editorLarga.root.innerHTML;
+    });
+  });
+}
+
+function abrirModalVerMas(restIndex) {
+  const r = restaurantes[restIndex];
+  const carouselInner = r.imagenes.filter(img => img).map((img, idx) => `
+    <div class="carousel-item ${idx === 0 ? 'active' : ''}">
+      <img src="${img}" class="d-block w-100" alt="Imagen ${idx+1}">
+    </div>
+  `).join('');
+  const menuTable = r.menu && r.menu.length > 0
+    ? `
+      <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+          <thead class="thead-dark">
+            <tr>
+              <th>Plato</th>
+              <th>Descripción</th>
+              <th>Precio</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${r.menu.map(plato => `
+              <tr>
+                <td>${plato.nombre || plato.nombre_menu}</td>
+                <td>${plato.descripcion_larga || plato.descripcion_corta || 'Sin descripción'}</td>
+                <td>$${(+plato.precio || 0).toFixed(2)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : '<p>Este restaurante no tiene un menú disponible.</p>';
+  const modalHtml = `
+    <div class="modal fade" id="modal-vermas-${restIndex}" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">${r.nombre}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Descripción corta:</strong> ${r.descripcion_corta}</p>
+            <p><strong>Descripción larga:</strong> ${r.descripcion_larga}</p>
+            <hr>
+            <h6>Galería</h6>
+            <div id="carousel-${restIndex}" class="carousel slide mb-3" data-bs-ride="carousel">
+              <div class="carousel-inner">${carouselInner}</div>
+              <button class="carousel-control-prev" type="button" data-bs-target="#carousel-${restIndex}" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#carousel-${restIndex}" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+              </button>
+            </div>
+            <hr>
+            <h6>Menú Completo</h6>
+            ${menuTable}
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  const container = document.getElementById('modals-container');
+  container.innerHTML = modalHtml;
+  const modal = new bootstrap.Modal(document.getElementById(`modal-vermas-${restIndex}`));
+  modal.show();
+}
+
+function abrirModalMenu(restIndex) {
+  const r = restaurantes[restIndex];
+  if (!r.menu) r.menu = [];
+  const modalHtml = `
+    <div class="modal fade" id="modal-menu-${restIndex}" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Agregar / Editar platos de ${r.nombre}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="menu-form-${restIndex}">
+              ${r.menu.map((p, j) => `
+                <div class="menu-item mb-2 p-2 border rounded bg-light">
+                  <input type="text" class="form-control mb-1" value="${p.nombre || p.nombre_menu}" placeholder="Nombre del plato"
+                    onchange="restaurantes[${restIndex}].menu[${j}].nombre=this.value">
+                  <input type="text" class="form-control mb-1" value="${p.descripcion_corta}" placeholder="Descripción corta"
+                    onchange="restaurantes[${restIndex}].menu[${j}].descripcion_corta=this.value">
+                  <input type="text" class="form-control mb-1" value="${p.descripcion_larga}" placeholder="Descripción larga"
+                    onchange="restaurantes[${restIndex}].menu[${j}].descripcion_larga=this.value">
+                  <input type="number" class="form-control mb-1" value="${p.precio}" placeholder="Precio"
+                    onchange="restaurantes[${restIndex}].menu[${j}].precio=this.value">
+                  <div class="d-flex justify-content-between">
+                    <button class="btn btn-success btn-sm" onclick="guardarMenu(${restIndex},${j})">💾 Guardar</button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarMenu(${restIndex},${j}); abrirModalMenu(${restIndex})">🗑 Eliminar</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <button class="btn btn-primary btn-sm mt-2" onclick="
+              restaurantes[${restIndex}].menu.push({nombre:'', descripcion_corta:'', descripcion_larga:'', precio:0});
+              abrirModalMenu(${restIndex});
+            ">➕ Agregar plato</button>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  const container = document.getElementById('modals-container');
+  container.innerHTML = modalHtml;
+  const modal = new bootstrap.Modal(document.getElementById(`modal-menu-${restIndex}`));
+  modal.show();
+}
+
+// ------------------- AGREGAR NUEVO -------------------
+function agregarGaleria(){ galeria.push({ titulo:'Nuevo Banner', descripcion_corta:'', descripcion_larga:'', imagen:'', created_at:new Date().toISOString() }); renderGaleria(); }
+function agregarJuego(){ juegos.push({ nombre:'Nuevo Juego', descripcion_corta:'', descripcion_larga:'', imagen:'', created_at:new Date().toISOString() }); renderJuegos(); }
+function agregarRestaurante(){ restaurantes.push({ nombre:'Nuevo', descCorta:'', descLarga:'', imagen:'', menu:[] }); renderRestaurantes(); }
+
+// ------------------- NAVEGACIÓN -------------------
+document.querySelectorAll('.sidebar a').forEach(link=>{
+  link.addEventListener('click',e=>{
+    e.preventDefault();
+    document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+    link.classList.add('active');
+    const section = link.dataset.section;
+    document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+    document.getElementById(`${section}-section`).style.display='block';
+    document.getElementById('panel-title').textContent = 'Editar '+link.textContent;
+  });
+});
+
+
+
+
+</script>
+
+
+</body>
+</html>

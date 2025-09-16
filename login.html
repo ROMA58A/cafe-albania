@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login / Registro - Café Albania</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+  /* ================== VARIABLES ================== */
+:root {
+  --accent-green: #22c55e;
+  --accent-orange: #f97316;
+  --error-red: #ef4444;
+  --bg-card: rgba(255, 255, 255, 0.15);
+  --input-bg: rgba(255, 255, 255, 0.25);
+  --text-dark: #111827;
+  --text-light: #f9fafb;
+  --glass-blur: blur(20px);
+}
+
+/* ================== GLOBAL ================== */
+body {
+  font-family: 'Poppins', sans-serif;
+  background: url('https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1600') no-repeat center center fixed;
+  background-size: cover;
+  display: flex; justify-content: center; align-items: center; flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+  margin: 0;
+}
+
+.overlay {
+  position: absolute; inset: 0;
+  background: rgba(11,21,18,0.7);
+  z-index: 0;
+  backdrop-filter: var(--glass-blur);
+}
+
+/* ================== LOGIN CARD ================== */
+.login-card {
+  position: relative; z-index: 1;
+  background: var(--bg-card);
+  padding: 2.5rem 3rem;
+  border-radius: 1.8rem;
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.35), inset 0 1px 2px rgba(255,255,255,0.2);
+  width: 100%; max-width: 440px;
+  text-align: center; overflow: hidden;
+  animation: cardAppear 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+}
+@keyframes cardAppear {
+  0% { transform: scale(0.85) translateY(40px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ================== TITULO ================== */
+.login-card h1 {
+  color: var(--accent-green);
+  margin-bottom: 1.5rem;
+  font-weight: 800;
+  font-size: 2.6rem;
+  text-shadow: 0 4px 15px rgba(34,197,94,0.4);
+  letter-spacing: 1px;
+}
+
+/* ================== TABS ================== */
+.tab-buttons {
+  display: flex; margin-bottom: 2rem;
+  border-radius: 50px; overflow: hidden;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+}
+.tab-buttons button {
+  flex: 1; padding: 0.9rem 0;
+  border: none; cursor: pointer;
+  font-weight: 600; font-size: 1rem; letter-spacing: 0.6px;
+  background: transparent; color: var(--text-light);
+  transition: all 0.35s ease;
+}
+.tab-buttons button.active {
+  background: var(--accent-green);
+  color: #fff;
+  box-shadow: inset 0 -3px 10px rgba(0,0,0,0.3);
+  transform: scale(1.05);
+}
+
+/* ================== FORM ================== */
+.form-container { position: relative; height: 320px; }
+.form-panel {
+  position: absolute; top:0; left:0; width: 100%;
+  transition: all 0.6s ease; opacity: 1;
+}
+.form-panel.hidden { opacity: 0; transform: translateX(100%); pointer-events: none; }
+
+.input-container { position: relative; margin-bottom: 1.2rem; }
+
+.form-panel input {
+  width: 100%; padding: 1rem 1rem 1rem 2.8rem;
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255,255,255,0.3);
+  font-size: 1rem;
+  background: var(--input-bg);
+  color: var(--text-light);
+  transition: all 0.4s ease;
+  backdrop-filter: blur(6px);
+}
+.form-panel input::placeholder { color: rgba(255,255,255,0.6); }
+.form-panel input:focus {
+  outline: none; border-color: var(--accent-green);
+  box-shadow: 0 0 18px rgba(34,197,94,0.6);
+  transform: scale(1.03);
+}
+
+/* ================== ICONS ================== */
+.input-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: rgba(255,255,255,0.6);
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+}
+.input-container:focus-within .input-icon { color: var(--accent-green); }
+
+.password-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  cursor: pointer; font-size: 1.2rem; color: rgba(255,255,255,0.6);
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+.password-toggle:hover { color: var(--accent-green); transform: scale(1.1); }
+
+/* ================== BUTTON ================== */
+.submit-btn {
+  width: 100%; padding: 1rem;
+  background: linear-gradient(135deg, var(--accent-green), #16a34a);
+  color: #fff;
+  font-weight: 700; border: none;
+  border-radius: 0.9rem;
+  cursor: pointer;
+  font-size: 1.05rem; letter-spacing: 1px; text-transform: uppercase;
+  transition: all 0.35s ease;
+  box-shadow: 0 6px 20px rgba(34,197,94,0.35);
+}
+.submit-btn:hover {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 25px rgba(34,197,94,0.5);
+}
+.submit-btn:active { transform: scale(0.98); }
+
+/* ================== ERROR ================== */
+.error-msg {
+  color: var(--error-red);
+  margin-bottom: 1rem;
+  font-size: 0.92rem;
+  display: none;
+  font-weight: 600;
+  text-align: left;
+  padding-left: 5px;
+  animation: shake 0.4s ease;
+}
+.error-msg i { margin-right: 6px; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-6px); }
+  40%,80% { transform: translateX(6px); }
+}
+
+/* ================== FOOTER ================== */
+.footer {
+  margin-top: 1.8rem;
+  text-align: center;
+  color: #f3f4f6;
+  z-index: 1;
+  font-size: 0.9rem;
+  animation: fadeUp 1s ease forwards;
+}
+@keyframes fadeUp {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.social-icons {
+  display: flex; justify-content: center; gap: 1.2rem;
+  margin-top: 0.6rem;
+}
+.social-icons a {
+  width: 48px; height: 48px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  color: #f3f4f6;
+  transition: all 0.4s ease;
+  text-decoration: none;
+  backdrop-filter: blur(5px);
+}
+.social-icons a:hover {
+  background: var(--accent-green);
+  transform: translateY(-6px) scale(1.15) rotate(8deg);
+  color: #fff;
+}
+.credits {
+  margin-top: 0.8rem;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.5px;
+}
+.credits a {
+  color: var(--accent-orange);
+  text-decoration: none;
+  transition: color 0.3s, text-decoration 0.3s;
+}
+.credits a:hover { text-decoration: underline; color: #fff; }
+
+/* ================== INPUTS RESPONSIVE ================== */
+.form-panel input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem; /* espacio para el icono */
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255,255,255,0.3);
+  font-size: 1rem;
+  background: var(--input-bg);
+  color: var(--text-light);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(6px);
+  box-sizing: border-box;
+}
+
+/* Placeholder */
+.form-panel input::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+
+/* Focus */
+.form-panel input:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 15px rgba(34,197,94,0.5);
+}
+
+/* Iconos dentro de inputs */
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.6);
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .form-panel input {
+    font-size: 0.95rem;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+    height: 2.8rem;
+  }
+
+  .input-icon {
+    font-size: 1rem;
+    left: 10px;
+  }
+
+  .password-toggle {
+    font-size: 1rem;
+    right: 10px;
+  }
+}
+
+
+/* ================== RESPONSIVE ================== */
+@media (max-width: 500px) {
+  .login-card {
+    padding: 2rem 1.5rem;
+    max-width: 90%;
+  }
+
+  .login-card h1 {
+    font-size: 2rem;
+  }
+
+  .tab-buttons button {
+    font-size: 0.9rem;
+    padding: 0.7rem 0;
+  }
+
+  .form-container { height: auto; }
+  .form-panel { position: relative; transform: none; opacity: 1; pointer-events: all; }
+
+  .form-panel input {
+    font-size: 0.95rem;
+    padding-left: 2.4rem;
+  }
+
+  .submit-btn {
+    font-size: 1rem;
+    padding: 0.9rem;
+  }
+
+  .social-icons a {
+    width: 40px; height: 40px;
+    font-size: 1.2rem;
+  }
+}
+
+</style>
+</head>
+<body>
+<!-- Overlay de fondo -->
+<div class="overlay"></div>
+
+<!-- Card principal de login/registro -->
+<div class="login-card">
+
+  <!-- Título -->
+  <h1>Café Albania</h1>
+
+  <!-- Tabs de login/registro -->
+  <div class="tab-buttons">
+    <button id="login-tab" class="active" onclick="showTab('login')">Iniciar Sesión</button>
+    <button id="register-tab" onclick="showTab('register')">Registrarse</button>
+  </div>
+
+  <!-- Contenedor de formularios -->
+  <div class="form-container">
+
+    <!-- Formulario de Login -->
+    <form id="login-form" class="form-panel" onsubmit="login(event)">
+      <!-- Mensaje de error -->
+      <div class="error-msg" id="login-error">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+
+      <!-- Email -->
+      <div class="input-container">
+        <input type="email" id="login-email" placeholder="Correo electrónico" autocomplete="username" required>
+        <i class="input-icon fas fa-envelope"></i>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="input-container">
+        <input type="password" id="login-password" placeholder="Contraseña" autocomplete="current-password" required>
+        <i class="input-icon fas fa-lock"></i>
+        <span class="password-toggle" onclick="togglePassword('login-password', this)">
+          <i class="fas fa-eye"></i>
+        </span>
+      </div>
+
+      <!-- Botón enviar -->
+      <button class="submit-btn" type="submit">Entrar</button>
+    </form>
+
+    <!-- Formulario de Registro -->
+    <form id="register-form" class="form-panel hidden" onsubmit="register(event)">
+      <!-- Mensaje de error -->
+      <div class="error-msg" id="register-error">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+
+      <!-- Nombre completo -->
+      <div class="input-container">
+        <input type="text" id="reg-nombre" placeholder="Nombre completo" autocomplete="name" required>
+        <i class="input-icon fas fa-user"></i>
+      </div>
+
+      <!-- Email -->
+      <div class="input-container">
+        <input type="email" id="reg-email" placeholder="Correo electrónico" autocomplete="email" required>
+        <i class="input-icon fas fa-envelope"></i>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="input-container">
+        <input type="password" id="reg-password" placeholder="Contraseña" autocomplete="new-password" required>
+        <i class="input-icon fas fa-lock"></i>
+        <span class="password-toggle" onclick="togglePassword('reg-password', this)">
+          <i class="fas fa-eye"></i>
+        </span>
+      </div>
+
+      <!-- Botón enviar -->
+      <button class="submit-btn" type="submit">Registrarse</button>
+    </form>
+
+  </div> <!-- Fin form-container -->
+
+  <!-- Footer compartido -->
+  <div class="footer">
+    <p>Síguenos en redes sociales</p>
+    <div class="social-icons">
+      <a href="#"><i class="fab fa-facebook-f"></i></a>
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-twitter"></i></a>
+    </div>
+  <div class="credits">
+  Desarrollado por <a href="https://cygnus-ti.com/" target="_blank">Cygnus-TI</a> | Grupo Albania | 
+  Reporta cualquier error a <a href="mailto:soporte@cygnus-ti.com">soporte@cygnus-ti.com</a>
+</div>
+
+  </div>
+
+</div> <!-- Fin login-card -->
+
+<script>
+  // ------------------- VARIABLES -------------------
+let BASE_URL = ''; // Se asignará desde config.xml
+let configLoaded = false;
+
+// ------------------- CARGA EL XML -------------------
+async function loadConfig() {
+  try {
+    const res = await fetch('/config.xml'); // Ruta de tu XML
+    const text = await res.text();
+
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "application/xml");
+
+    const urlNode = xml.querySelector('baseUrl');
+    if (urlNode) {
+      BASE_URL = urlNode.textContent.trim();
+      // Asegurar que termina con /api
+      if (!BASE_URL.endsWith('/api')) BASE_URL += '/api';
+      console.log("BASE_URL cargada:", BASE_URL);
+      configLoaded = true;
+    } else {
+      console.warn('No se encontró <baseUrl> en config.xml');
+    }
+  } catch (err) {
+    console.error('Error cargando config.xml:', err);
+  }
+}
+
+// ------------------- UTILS -------------------
+function validarDominio(email) {
+  return email.toLowerCase().endsWith('@cafealbania.com');
+}
+
+function setCookie(name, value, days = 1) {
+  const maxAge = 60 * 60 * 24 * days;
+  document.cookie = `${name}=${value}; path=/; max-age=${maxAge}; Secure; SameSite=Strict`;
+}
+
+// ------------------- TOGGLE PASSWORD -------------------
+function togglePassword(id, el) {
+  const input = document.getElementById(id);
+  const icon = el.querySelector('i');
+  if(input.type === "password") {
+    input.type = "text";
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    input.type = "password";
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
+
+// ------------------- SWITCH TABS -------------------
+function showTab(tab) {
+  const loginTab = document.getElementById('login-tab');
+  const registerTab = document.getElementById('register-tab');
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  const loginError = document.getElementById('login-error');
+  const registerError = document.getElementById('register-error');
+
+  loginError.style.display = 'none';
+  registerError.style.display = 'none';
+
+  if(tab === 'login'){
+    loginForm.classList.remove('hidden');
+    registerForm.classList.add('hidden');
+    loginTab.classList.add('active');
+    registerTab.classList.remove('active');
+  } else {
+    loginForm.classList.add('hidden');
+    registerForm.classList.remove('hidden');
+    loginTab.classList.remove('active');
+    registerTab.classList.add('active');
+  }
+}
+
+// ------------------- LOGIN -------------------
+async function login(event) {
+  event.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value.trim();
+  const errorMsg = document.getElementById('login-error');
+  errorMsg.style.display = 'none';
+
+  if (!configLoaded) {
+    errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Configuración no cargada. Intente recargar la página.';
+    errorMsg.style.display = 'block';
+    return;
+  }
+
+  if (!validarDominio(email)) {
+    errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Solo se permiten correos corporativos.';
+    errorMsg.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const text = await res.text(); // Leer siempre como texto
+    let data;
+    try {
+      data = JSON.parse(text); // Intentar parsear JSON
+    } catch {
+      console.error('Respuesta no JSON:', text);
+      errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error inesperado del servidor.';
+      errorMsg.style.display = 'block';
+      return;
+    }
+
+    if (!res.ok) {
+      errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.message || 'Error en login'}`;
+      errorMsg.style.display = 'block';
+    } else {
+      setCookie('token', data.token);
+      setCookie('rol', data.rol);
+
+      Swal.fire({ icon: 'success', title: '¡Bienvenido!', showConfirmButton: false, timer: 1500 })
+        .then(() => { window.location.href = 'panel.html'; });
+    }
+
+  } catch (err) {
+    console.error(err);
+    errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error de conexión con el servidor.';
+    errorMsg.style.display = 'block';
+  }
+}
+
+// ------------------- REGISTER -------------------
+async function register(event) {
+  event.preventDefault();
+  const nombre = document.getElementById('reg-nombre').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value.trim();
+  const errorMsg = document.getElementById('register-error');
+  errorMsg.style.display = 'none';
+
+  if (!configLoaded) {
+    errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Configuración no cargada. Intente recargar la página.';
+    errorMsg.style.display = 'block';
+    return;
+  }
+
+  if (!validarDominio(email)) {
+    errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Solo se permiten correos corporativos.';
+    errorMsg.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, email, password, rol: 'usuario' })
+    });
+
+    const text = await res.text(); // Leer siempre como texto
+    let data;
+    try {
+      data = JSON.parse(text); // Intentar parsear JSON
+    } catch {
+      console.error('Respuesta no JSON:', text);
+      errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error inesperado del servidor.';
+      errorMsg.style.display = 'block';
+      return;
+    }
+
+    if (!res.ok) {
+      errorMsg.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.message || 'Error en registro'}`;
+      errorMsg.style.display = 'block';
+    } else {
+      setCookie('token', data.token);
+      setCookie('rol', data.rol);
+
+      Swal.fire({ icon: 'success', title: '¡Registro exitoso!', showConfirmButton: false, timer: 1500 })
+        .then(() => { window.location.href = 'panel.html'; });
+    }
+
+  } catch (err) {
+    console.error(err);
+    errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error de conexión con el servidor.';
+    errorMsg.style.display = 'block';
+  }
+}
+
+// ------------------- INICIAR CARGA -------------------
+loadConfig();
+
+
+</script>
+
+</body>
+</html>

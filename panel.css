@@ -1,0 +1,302 @@
+/* =====================================================
+   VARIABLES CSS
+===================================================== */
+:root {
+  --bg-sidebar: #111827;
+  --bg-content: #f4f4f5;
+  --text-light: #f9fafb;
+  --text-dark: #111827;
+  --accent: #22c55e;
+  --btn-primary: #f59e0b;
+  --btn-save: #22c55e;
+  --btn-danger: #ef4444;
+  --btn-warning: #facc15;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0,0,0,0.08);
+  --input-bg: #f9fafb;
+  --input-border: #d1d5db;
+
+  /* Dark mode */
+  --bg-sidebar-dark: #1f2937;
+  --bg-content-dark: #111827;
+  --text-light-dark: #f9fafb;
+  --text-dark-dark: #f3f4f6;
+  --card-bg-dark: #1f2937;
+  --card-shadow-dark: rgba(0,0,0,0.3);
+  --input-bg-dark: #374151;
+  --input-border-dark: #4b5563;
+}
+
+/* =====================================================
+   GENERAL
+===================================================== */
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg-content);
+  color: var(--text-dark);
+  margin: 0;
+  font-size: 0.875rem;
+  transition: background 0.3s, color 0.3s;
+}
+body.dark-mode {
+  background: var(--bg-content-dark);
+  color: var(--text-dark-dark);
+}
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 220px;
+  background: var(--bg-sidebar);
+  color: var(--text-light);
+  padding-top: 3rem; /* espacio para el toggle */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  transition: left 0.3s ease, background 0.3s;
+  z-index: 1000;
+}
+.sidebar h2 {
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* LINKS */
+.sidebar a {
+  display: flex;
+  align-items: center;
+  color: inherit;
+  padding: 0.5rem 0.6rem;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 5px;
+  transition: background 0.3s, color 0.3s;
+}
+.sidebar a i { margin-right: 0.5rem; }
+.sidebar a.active {
+  color: var(--accent);
+  background: rgba(34,197,94,0.15);
+}
+.sidebar a:hover {
+  background: rgba(34,197,94,0.2);
+}
+
+
+
+/* =====================================================
+   BOTÓN HAMBURGUESA
+===================================================== */
+.sidebar-toggle {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1101;
+  background: var(--btn-primary);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: background 0.3s ease;
+  display: none; /* por defecto oculto en desktop */
+}
+.sidebar-toggle:hover { background: var(--accent); }
+
+/* =====================================================
+   CONTENIDO
+===================================================== */
+.content {
+  margin-left: 220px;
+  padding: 1rem;
+  transition: margin-left 0.3s ease, background 0.3s, color 0.3s;
+}
+.content.shifted { margin-left: 220px; }
+
+/* =====================================================
+   RESPONSIVE TABLET
+===================================================== */
+@media (max-width: 1024px) {
+  .sidebar {
+    left: -220px;
+  }
+  .sidebar.show { left: 0; }
+  .content { margin-left: 0; }
+  .content.shifted { margin-left: 220px; }
+  .sidebar-toggle { display: block; }
+}
+
+/* =====================================================
+   RESPONSIVE MÓVIL
+===================================================== */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 180px;
+    left: -180px;
+    padding-top: 3rem;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+  }
+  .sidebar.show { left: 0; }
+  .content {
+    margin-left: 0;
+    padding-top: 2.5rem; /* espacio para el toggle */
+  }
+  .content.shifted { margin-left: 180px; }
+  .sidebar-toggle { display: block; }
+}
+
+/* =====================================================
+   SECTION TITLE
+===================================================== */
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  gap: 10px;
+}
+.section-title h4 {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+.section-title span {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* =====================================================
+   CARDS
+===================================================== */
+.card-edit {
+  background: var(--card-bg);
+  border-radius: 0;
+  box-shadow: 0 2px 6px var(--card-shadow);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+.card-edit img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
+
+/* INPUTS Y TEXTAREAS */
+.card-edit input[type="text"],
+.card-edit input[type="number"],
+.card-edit input[type="file"],
+.card-edit textarea {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text-dark);
+}
+.card-edit input:focus,
+.card-edit textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* PREVIEW DE IMÁGENES */
+.imagenes-preview {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+}
+.imagenes-preview img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #ccc;
+}
+
+/* EDITOR */
+.editor-corta,
+.editor-larga {
+  border: 1px solid #ccc;
+  padding: 4px;
+  font-size: 0.875rem;
+  min-height: 20px;
+  background-color: #fefefe;
+  color: var(--text-dark);
+}
+.editor-larga { min-height: 50px; background-color: #fffbe6; }
+
+/* BOTONES */
+.card-buttons,
+.menu-section {
+  display: flex;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+}
+.btn-save,
+.btn-primary,
+.btn-danger,
+.btn-warning {
+  border-radius: 0;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  color: #fff;
+}
+.btn-save { background: var(--btn-save); }
+.btn-primary { background: var(--btn-primary); }
+.btn-danger { background: var(--btn-danger); }
+.btn-warning { background: var(--btn-warning); }
+
+/* =====================================================
+   DARK MODE
+===================================================== */
+body.dark-mode .sidebar {
+  background: var(--bg-sidebar-dark);
+  color: var(--text-light-dark);
+}
+body.dark-mode .sidebar a { color: var(--text-light-dark); }
+body.dark-mode .sidebar a.active {
+  color: var(--accent);
+  background: rgba(34,197,94,0.15);
+}
+body.dark-mode .sidebar a:hover { background: rgba(34,197,94,0.2); }
+body.dark-mode .content {
+  background: var(--bg-content-dark);
+  color: var(--text-light-dark);
+}
+body.dark-mode .section-title h4 { color: var(--text-light-dark); }
+body.dark-mode .section-title span { color: #9ca3af; }
+body.dark-mode .card-edit {
+  background: var(--card-bg-dark);
+  box-shadow: 0 2px 6px var(--card-shadow-dark);
+  color: var(--text-light-dark);
+}
+body.dark-mode .card-edit img { border: 1px solid var(--input-border-dark); }
+body.dark-mode .card-edit input,
+body.dark-mode .card-edit textarea {
+  background: var(--input-bg-dark);
+  border-color: var(--input-border-dark);
+  color: var(--text-light-dark);
+}
+body.dark-mode .editor-corta,
+body.dark-mode .editor-larga {
+  background-color: #4b5563;
+  border-color: var(--input-border-dark);
+  color: var(--text-light-dark);
+}
+body.dark-mode .imagenes-preview img { border: 1px solid var(--input-border-dark); }
